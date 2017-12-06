@@ -28,7 +28,7 @@ func main() {
 			break
 		}
 
-		passMap := make(map[string]string)
+			passMap := make(map[string]string)
 
 		unique := true
 		for _, record := range line {
