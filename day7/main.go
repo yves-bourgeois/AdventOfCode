@@ -2,97 +2,102 @@ package main
 
 import (
 	"bufio"
-	"encoding/csv"
 	"fmt"
-	"io"
-	"io/ioutil"
+	"os"
 	"strconv"
 	"strings"
 )
 
-var nodes map[string]node
+var nodes map[string]*node
 
 type node struct {
 	name     string
-	prevNode *node
-	nextNode *[]node
 	weight   int
+	prevNode *node
+	nextNode []*node
 }
 
 func main() {
 	fmt.Println("day 7: And so it begins..")
 
-	//	found := false
-	foundElem := ""
+	nodes = make(map[string]*node)
 
-	getData()
+	parseData()
 
-	// for _, el := range parent {
-	// 	found = false
-	// 	for _, el2 := range child {
-	// 		if el == el2 {
-	// 			found = true
-	// 			break
-	// 		}
-	// 	}
-	// 	if found == false {
-	// 		foundElem = el
-	// 		break
-	// 	}
-	// }
-	fmt.Println("jkl;;;")
-	fmt.Println(foundElem)
+	var rootNode node
+	for _, node := range nodes {
+		if node.prevNode == nil {
+			rootNode = *node
+			break
+		}
+	}
+
+	fmt.Println("Rootnode: " + rootNode.name)
+
+	findBalance(rootNode.name)
 }
 
-func getData() {
-	nodes := make(map[string]node)
-
-	data, err := ioutil.ReadFile("./input")
-
-	if err != nil {
-		fmt.Println("Error whilst opening file.. " + err.Error())
+func findBalance(rootNode string) {
+	for _, node := range nodes[rootNode].nextNode {
+		fmt.Println("Node " + node.name + " has a weight of " + strconv.Itoa(node.weight))
+		fmt.Println("This program: " + node.name + " has a total weight of " + strconv.Itoa(node.calcTotalWeight()))
 	}
 
-	csvReader := csv.NewReader(strings.NewReader(string(data)))
-	csvReader.Comma = ' '
+	fmt.Println("-------")
+	for _, node := range nodes["gtervu"].nextNode {
+		fmt.Println("Node " + node.name + " has a weight of " + strconv.Itoa(node.weight))
+		fmt.Println("This program: " + node.name + " has a total weight of " + strconv.Itoa(node.calcTotalWeight()))
+	}
 
-	for {
-		line, err := csvReader.Read()
+	fmt.Println(75514 - 75509)
+	fmt.Println(2260 - 5)
+}
 
-		if err == io.EOF {
-			fmt.Println("End of file reached..")
-			break
+func (n *node) calcTotalWeight() int {
+	weight := n.weight
+
+	for _, child := range n.nextNode {
+		weight = weight + child.calcTotalWeight()
+	}
+
+	return weight
+
+}
+
+func parseData() {
+	fileHandle, _ := os.Open("input")
+	defer fileHandle.Close()
+	fileScanner := bufio.NewScanner(fileHandle)
+
+	for fileScanner.Scan() {
+		splitOnArrow := strings.Split(fileScanner.Text(), " -> ")
+
+		nodeInfo := strings.Split(splitOnArrow[0], " ")
+
+		nodeName := strings.Trim(nodeInfo[0], " ")
+		nodeWeight, _ := strconv.Atoi(strings.Replace(strings.Replace(strings.Trim(nodeInfo[1], " "), "(", "", -1), ")", "", -1))
+
+		if _, ok := nodes[nodeName]; ok {
+			//Node already exists: only set its weight
+			nodes[nodeName].weight = nodeWeight
+		} else {
+			node := node{name: nodeName, weight: nodeWeight, prevNode: nil, nextNode: nil}
+			nodes[nodeName] = &node
 		}
 
-		for i, el := range line {
-			var nd node
-			if i == 0 {
-				nd.name = el
+		if len(splitOnArrow) == 2 {
+			//children found
+			children := strings.Split(splitOnArrow[1], ", ")
+			for _, child := range children {
+				if _, ok := nodes[child]; ok == false {
+					//preventifly create child node
+					node := node{name: child, weight: -1, prevNode: nil, nextNode: nil}
+					nodes[child] = &node
+				}
+				nodes[child].prevNode = nodes[nodeName]
+				nodes[nodeName].nextNode = append(nodes[nodeName].nextNode, nodes[child])
 			}
-			if i == 1 {
-				el = strings.Replace(el, "(", "", -1)
-				el = strings.Replace(el, ")", "", -1)
-				nd.weight, _ = strconv.Atoi(el)
-			}
-			nodes[nd.name] = nd
-		}
-	}
-
-	data, _ = ioutil.ReadFile("input")
-	//memoryString := string(fileContent)
-
-	stream := bufio.NewReader(strings.NewReader(string(data)))
-
-	for {
-		line, _, err := stream.ReadLine()
-		if err != nil {
-			break
 		}
 
-		strLine := string(line)
-
-		splitLine := strings.Split(line, "->")
-
 	}
-
 }
