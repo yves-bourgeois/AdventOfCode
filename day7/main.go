@@ -50,7 +50,8 @@ func findBalance(rootNode string) {
 	}
 
 	fmt.Println(75514 - 75509)
-	fmt.Println(2260 - 5)
+
+	fmt.Println(1531 - 5)
 }
 
 func (n *node) calcTotalWeight() int {
