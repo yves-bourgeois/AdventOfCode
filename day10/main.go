@@ -12,7 +12,7 @@ func main() {
 
 	list := initList()
 
-	instructions := parseData()
+	instructions := parseData()	
 
 	skipSize := 0
 	curPosition := 0
